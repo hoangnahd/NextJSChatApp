@@ -7,7 +7,7 @@ import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 
 const Form = ({type}) => {
-    const { register, handleSubmit, watch, formState: { errors }, getValues } = useForm();
+    const { register, handleSubmit, formState: { errors }, getValues } = useForm();
     const router = useRouter();
     const HanldeSubmit = async (data) => {
         if(type == "register") {
@@ -33,6 +33,7 @@ const Form = ({type}) => {
             else
                 toast.error("Invalid username or password!");
             
+            console.log(res);
         }
     }
 
@@ -42,7 +43,7 @@ const Form = ({type}) => {
                 <div className="logo"> NextJS App Chat </div>
                 {type == "login" ? (
                     <form onSubmit={handleSubmit(HanldeSubmit)} >
-                        <div className="flex items-center w-full relative">
+                        <div className="flex items-center relative">
                             <input
                                 type="email" 
                                 placeholder="Enter your email" 

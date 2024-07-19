@@ -25,13 +25,11 @@ const handler = NextAuth({
         }
         // Add logic here to look up the user from the credentials supplied
         const user = await User.findOne({email: credentials?.email})
-        console.log(user?.email)
         if (!user || !user?.password) {
           
           console.log("User does not exist")
           throw new Error("User does not exist!");
         } else {
-          console.log(credentials?.password)
           const res = await compare(credentials?.password, user.password)
           if(!res) {
             console.log("Invalid password");
@@ -43,7 +41,18 @@ const handler = NextAuth({
         
       }
     })
-  ]
+  ],
+  secret: process.env.NEXTAUTH_SECRET,
+  callbacks: {
+    async session({ session }) {
+      const userInfo = await User.findOne({email: session.user.email});
+      session.user.id = userInfo._id.toString();
+      session.user = {...session.user, ...userInfo._doc}
+      
+      return session
+    }
+  }
+
 })
 
 

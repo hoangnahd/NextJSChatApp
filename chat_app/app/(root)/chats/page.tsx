@@ -1,8 +1,12 @@
-
+"use client"
+import { useSession } from "next-auth/react";
 
 const Chats = () => {
+    const { data: session, status } = useSession()
+    console.log(session);
+
     return (
-        <div></div>
+        <div>Chats</div>
     )
 }
 
