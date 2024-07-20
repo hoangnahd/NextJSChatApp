@@ -2,8 +2,8 @@
 import { useSession } from "next-auth/react"
 import { CldUploadButton } from "next-cloudinary";
 import Image from "next/image";
-import { EditAttributes, EditNote, EditNotifications, EditOffOutlined } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { EditNote } from "@mui/icons-material";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 
 export default function Profile() {
@@ -13,6 +13,8 @@ export default function Profile() {
     const user = session?.user;
     const [isFormChanged, setIsFormChanged] = useState(false);
     const [loading, setLoading] = useState(true);
+    const containerRef = useRef(null);
+    const [imageWidth, setImageWidth] = useState(0);
 
     const handleFormChange = () => {
         setIsFormChanged(true);
@@ -24,6 +26,10 @@ export default function Profile() {
                 username: user?.username,
                 profileImage: user?.profileImage
             })
+            if (containerRef.current) {
+                const containerWidth = containerRef.current.clientWidth;
+                setImageWidth(containerWidth*2); // Set width to half of container width
+            }
         }
         setLoading(false);
     }, [user])
@@ -61,11 +67,11 @@ export default function Profile() {
                 uploadPreset="assa7iwc"
                 className="bg-white flex justify-center items-center w-[240px] h-[240px] rounded-full overflow-hidden border-black relative group"
             >
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full" ref={containerRef}>
                     <Image 
                         src={watch("profileImage") || user?.profileImage || "/assets/person.jpg"} 
                         alt="profile picture" 
-                        width={350} 
+                        width={imageWidth ? imageWidth*2 : 300} 
                         height={350}
                         {...register("profileImage")} 
                         className="object-cover w-full h-full border-2 border-white rounded-full shadow-lg"
@@ -82,13 +88,16 @@ export default function Profile() {
                 {...register("username", {
                     validate: (value) => {
                         if(value.length < 3) {
-                            return "Username must be at least 3 characters"
+                            return "Invalid username"
                         }
                     }
                 })}
                 type="text"
                 onChange={handleFormChange}
             />
+            { errors.username &&<p className="text-sm text-red-500 w-[240px] flex items-start -mt-8 -mr-10">
+                {errors.username.message}
+            </p>}
             <button 
                 className={`btn border glass-effect hover:bg-gray-300 hover:bg-opacity-30 duration-200 ease-in-out px-16 text-white -ml-3 ${!isFormChanged ? 'opacity-50 cursor-not-allowed':`` } `}
                 disabled={!isFormChanged}

@@ -146,7 +146,7 @@ const Form = ({type}) => {
                     />
                     {errors.confirmPassword && (
                         <p className="error-msg -mt-2">
-                        {errors.confirmPassword.message}
+                            {errors.confirmPassword.message}
                         </p>
                     )}
                     <button className="btn text-black bg-white w-full mt-2">Create Account</button>
@@ -155,7 +155,7 @@ const Form = ({type}) => {
             )}
 
             { type === "login" ? (
-                <p className="text-center ">Don't have an account? 
+                <p className="text-center ">Don&apos;t have an account? 
                 <Link href="/register" className="font-bold">Register</Link> Here</p>
             ) : (
                 <p className="text-center ">Already have an account?

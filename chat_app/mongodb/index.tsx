@@ -1,5 +1,4 @@
 import mongoose from "mongoose"
-import { tree } from "next/dist/build/templates/app-page";
 
 let isConnected = false;
 

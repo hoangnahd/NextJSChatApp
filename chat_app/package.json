@@ -20,7 +20,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hook-form": "^7.52.1",
-    "react-hot-toast": "^2.4.1"
+    "react-hot-toast": "^2.4.1",
+    "react-measure": "^2.5.2"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
