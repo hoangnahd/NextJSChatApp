@@ -4,15 +4,17 @@ import { Search } from "@mui/icons-material";
 import { useState, useRef, useEffect } from "react";
 import { Contacts } from "@/components/Contacts";
 
-const Chats = () => {
+const ChatDetail = ({params}) => {
     const { data: session, status } = useSession();
     const [search, setSearch] = useState(false);
     const [loading, setLoading] = useState(true);
     const [searchValue, setSearchValue] = useState("");
     const [contacts, setContacts] = useState([]);
+    const [currentContact, setCurrentContact] = useState();
+    const [chatDetail, setChatDetail] = useState();
+
     const inputRef = useRef(null);
     const user = session?.user;
-
     const getContacts = async () => {
         try {
             const res = await fetch(`/api/users/search/${searchValue ? searchValue : "!@"}`);
@@ -31,25 +33,36 @@ const Chats = () => {
             console.error("Failed to fetch contacts:", error);
         }
     };
-
+    const getChatDetail = async () => {
+        try {
+            const {chatId} = params;
+            const response = await fetch("/api/chats/"+chatId, {
+                method: "GET",
+                headers: {"Content-Type": "application/json"}
+            })
+            const result = await response.json();
+            setChatDetail(result);
+            console.log(chatDetail);
+        } catch (error) {
+            console.log(error)
+        }
+    }
     const handleFocus = () => {
         setSearch(true);
     };
-
     const handleBlur = () => {
         setTimeout(() => {
             setSearch(false);
         }, 200); // Delay to allow click event to trigger
     };
-
     useEffect(() => {
         setLoading(true);
         if (user) {
-            if(search) getContacts(); // Fetch contacts whenever search or searchValue changes
+            getChatDetail();
             setLoading(false);
+            if(search) getContacts();
         }
     }, [user, search, searchValue]); // Add searchValue to dependencies
-
     return loading ? (
         <div className="flex justify-center -mt-16 items-center h-full">
             <div className="loader"></div>
@@ -81,8 +94,15 @@ const Chats = () => {
                     <Contacts value={searchValue} contacts={contacts} search={search} currentUserId={user._id} />
                 )}
             </div>
+            <div className="flex flex-col w-3/4">
+                <div className="text-white flex flex-col">
+                    <div>
+
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
 
-export default Chats;
+export default ChatDetail;
