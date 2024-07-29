@@ -1,54 +1,66 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { Search } from "@mui/icons-material";
-import { useState, useRef, useEffect } from "react";
-import { Contacts } from "@/components/Contacts";
+import { useState, useEffect } from "react";
+import { ChatList } from "@/components/ChatList";
+import { pusherClient } from "@/lib/pusher";
 
 const Chats = () => {
     const { data: session, status } = useSession();
-    const [search, setSearch] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [searchValue, setSearchValue] = useState("");
-    const [contacts, setContacts] = useState([]);
-    const inputRef = useRef(null);
-    const user = session?.user;
-
-    const getContacts = async () => {
+    const user = session?.user;   
+    const [chats, setChats] = useState([]);      
+    const getChats = async () => {
         try {
-            const res = await fetch(`/api/users/search/${searchValue ? searchValue : "!@"}`);
-            if (!res.ok) {
-                throw new Error(`Error: ${res.status}`);
+            const response = await fetch(`/api/users/${user?._id}`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" }
+            });
+    
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-            const data = await res.json();
-            let filteredContacts = [];
-            for (let i = 0; i < data.length; i++) {
-                if (data[i]._id !== user._id) { // Exclude current user
-                    filteredContacts.push(data[i]);
-                }
-            }
-            setContacts(filteredContacts); // Set filtered contacts
-        } catch (error) {
-            console.error("Failed to fetch contacts:", error);
+    
+            const result = await response.json();
+            setChats(result?.chats);
+        }
+        catch (err) {
+            
+            console.log('Error fetching chat details:', err);
         }
     };
-
-    const handleFocus = () => {
-        setSearch(true);
-    };
-
-    const handleBlur = () => {
-        setTimeout(() => {
-            setSearch(false);
-        }, 200); // Delay to allow click event to trigger
-    };
-
     useEffect(() => {
         setLoading(true);
-        if (user) {
-            if(search) getContacts(); // Fetch contacts whenever search or searchValue changes
+        if (user) {          
+            setTimeout(() => {
+                getChats();
+            }, 100)
             setLoading(false);
         }
-    }, [user, search, searchValue]); // Add searchValue to dependencies
+        
+    }, [user]);
+    useEffect(() => {
+        if (user) {
+            pusherClient.subscribe(user?._id);
+    
+            const handleChatUpdate = (updatedChat) => {
+                setChats((prevChats) => {
+                    const chatIndex = prevChats.findIndex(chat => chat._id === updatedChat._id);
+                    if (chatIndex !== -1) {
+                        // Replace the existing chat
+                        const newChats = [...prevChats];
+                        newChats[chatIndex].messages.push(updatedChat.message);
+                        newChats[chatIndex].lastMessageAt = updatedChat.message.createdAt;
+                        return newChats;
+                    }
+                });
+            }; 
+          pusherClient.bind("update-chat", handleChatUpdate);
+          return () => {
+            pusherClient.unsubscribe(user?._id);
+            pusherClient.unbind("update-chat", handleChatUpdate);
+          };
+        }
+      }, [user]);
 
     return loading ? (
         <div className="flex justify-center -mt-16 items-center h-full">
@@ -56,31 +68,7 @@ const Chats = () => {
         </div>
     ) : (
         <div className="flex flex-row h-full">
-            <div className="flex flex-col min-w-[300px] w-1/4 h-full border-r text-white">
-                <div className="flex justify-center w-full mt-5 min-w rounded-full relative">
-                    <button
-                        onClick={() => { inputRef.current.focus(); }}
-                        className="absolute -translate-y-1/2 left-[10px] xl:ml-3 top-1/2 z-10"
-                    >
-                        <Search className="" sx={{ color: "white" }} />
-                    </button>             
-                    <input 
-                        className="border glass-effect rounded-full w-[350px] opacity-85 h-9 px-[33px]" 
-                        style={{ backgroundColor: "rgb(30, 30, 30)" }}
-                        placeholder="Search..."
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
-                        ref={inputRef}
-                        value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                    />
-                </div>
-                {search ? (
-                    <Contacts value={searchValue} contacts={contacts} search={search} currentUserId={user._id} />
-                ) : (
-                    <Contacts value={searchValue} contacts={contacts} search={search} currentUserId={user._id} />
-                )}
-            </div>
+            <ChatList currentUserId={user?._id} chats={chats} />
         </div>
     );
 };

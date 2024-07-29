@@ -1,10 +1,10 @@
 "use client"
 import { useSession } from "next-auth/react"
 import { CldUploadButton } from "next-cloudinary";
-import Image from "next/image";
 import { EditNote } from "@mui/icons-material";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { FixedImage } from "@/components/FIxedImage";
 
 export default function Profile() {
 
@@ -13,8 +13,6 @@ export default function Profile() {
     const user = session?.user;
     const [isFormChanged, setIsFormChanged] = useState(false);
     const [loading, setLoading] = useState(true);
-    const containerRef = useRef(null);
-    const [imageWidth, setImageWidth] = useState(0);
 
     const handleFormChange = () => {
         setIsFormChanged(true);
@@ -26,10 +24,6 @@ export default function Profile() {
                 username: user?.username,
                 profileImage: user?.profileImage
             })
-            if (containerRef.current) {
-                const containerWidth = containerRef.current.clientWidth;
-                setImageWidth(containerWidth*2); // Set width to half of container width
-            }
         }
         setLoading(false);
     }, [user])
@@ -67,14 +61,13 @@ export default function Profile() {
                 uploadPreset="assa7iwc"
                 className="bg-white flex justify-center items-center w-[240px] h-[240px] rounded-full overflow-hidden border-black relative group"
             >
-                <div className="relative w-full h-full" ref={containerRef}>
-                    <Image 
+                <div className="relative w-full h-full">
+                    <FixedImage 
                         src={watch("profileImage") || user?.profileImage || "/assets/person.jpg"} 
-                        alt="profile picture" 
-                        width={imageWidth ? imageWidth*2 : 300} 
-                        height={350}
-                        {...register("profileImage")} 
+                        width={300} 
+                        height={350} 
                         className="object-cover w-full h-full border-2 border-white rounded-full shadow-lg"
+                        {...register("profileImage")}
                     />
 
                     <div className="absolute bottom-2 w-full -mb-3 h-14 left-1/2 transform -translate-x-1/2 flex items-center opacity-0 justify-center p-3 group-hover:opacity-80 bg-black duration-300 ease-in-out">

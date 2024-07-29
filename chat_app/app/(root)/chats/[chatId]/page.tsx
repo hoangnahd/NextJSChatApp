@@ -1,108 +1,139 @@
 "use client";
+import { ChatDetail } from "@/components/ChatDetail";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Search } from "@mui/icons-material";
-import { useState, useRef, useEffect } from "react";
-import { Contacts } from "@/components/Contacts";
+import { ChatList } from "@/components/ChatList";
+import { pusherClient } from "@/lib/pusher";
 
-const ChatDetail = ({params}) => {
+const ChatPage = () => { 
+    const { chatId } = useParams();
     const { data: session, status } = useSession();
-    const [search, setSearch] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [searchValue, setSearchValue] = useState("");
-    const [contacts, setContacts] = useState([]);
-    const [currentContact, setCurrentContact] = useState();
-    const [chatDetail, setChatDetail] = useState();
-
-    const inputRef = useRef(null);
     const user = session?.user;
-    const getContacts = async () => {
+    const [loading, setLoading] = useState(true);
+    const [others, setOthers] = useState([]);  
+    const [allMessages, setAllMessages] = useState({ messages: [] }); 
+    const [chats, setChats] = useState([]);
+
+    const getChats = async () => {
         try {
-            const res = await fetch(`/api/users/search/${searchValue ? searchValue : "!@"}`);
-            if (!res.ok) {
-                throw new Error(`Error: ${res.status}`);
-            }
-            const data = await res.json();
-            let filteredContacts = [];
-            for (let i = 0; i < data.length; i++) {
-                if (data[i]._id !== user._id) { // Exclude current user
-                    filteredContacts.push(data[i]);
-                }
-            }
-            setContacts(filteredContacts); // Set filtered contacts
-        } catch (error) {
-            console.error("Failed to fetch contacts:", error);
-        }
-    };
-    const getChatDetail = async () => {
-        try {
-            const {chatId} = params;
-            const response = await fetch("/api/chats/"+chatId, {
+            const response = await fetch(`/api/users/${user?._id}`, {
                 method: "GET",
-                headers: {"Content-Type": "application/json"}
-            })
+                headers: { "Content-Type": "application/json" }
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
             const result = await response.json();
-            setChatDetail(result);
-            console.log(chatDetail);
-        } catch (error) {
-            console.log(error)
+            const currentChat = result?.chats.find(chat => chat._id == chatId);
+
+            if (currentChat && currentChat.members && Array.isArray(currentChat.messages)) {
+                const otherMembers = currentChat.members.filter(member => member._id !== user?.id);
+                setOthers(otherMembers);   
+                setAllMessages({ messages: currentChat.messages });
+            } else {
+                console.log('Invalid response structure:', result);
+            }
+            setChats(result?.chats);
         }
-    }
-    const handleFocus = () => {
-        setSearch(true);
+        catch (error) {
+            console.log('Error fetching chats:', error);
+        }
     };
-    const handleBlur = () => {
-        setTimeout(() => {
-            setSearch(false);
-        }, 200); // Delay to allow click event to trigger
+
+    const SeenMessage = async () => {
+        try {
+            // Perform the fetch request to update the seen status
+            const response = await fetch(`/api/chats/${chatId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ currentUserId: user?._id })
+            });
+    
+            if (!response.ok) {
+                console.error("Failed to mark message as seen:", response.statusText);
+            }
+        } catch (error) {
+            console.error('Error marking message as seen:', error);
+        }
     };
+    
     useEffect(() => {
         setLoading(true);
         if (user) {
-            getChatDetail();
-            setLoading(false);
-            if(search) getContacts();
+           setLoading(false);
         }
-    }, [user, search, searchValue]); // Add searchValue to dependencies
+    }, [user]);
+
+    useEffect(() => {
+        if (chatId && user) {
+            getChats();
+        }
+    }, [chatId, user]);
+    useEffect(() => {
+        if (chatId) 
+            SeenMessage();     
+    }, [chatId]);
+
+    useEffect(() => {
+        if (user && chatId) {
+            const channel = pusherClient.subscribe(chatId.toString());
+    
+            const handleMessage = (newMessage) => {
+                // Add currentUserId to the seenBy field if it's not already there
+                if (!newMessage.seenBy.includes(user?._id)) {
+                    newMessage.seenBy.push(user?._id);
+                }
+    
+                // Update the chatDetail state with the new message
+                setAllMessages((prevChat) => ({
+                    ...prevChat,
+                    messages: [...prevChat.messages, newMessage],
+                }));
+    
+                // Update the chats state with the new message
+                setChats((prevChats) => {
+                    const chatIndex = prevChats.findIndex(chat => chat._id === chatId);
+                    if (chatIndex !== -1) {
+                        const updatedChat = { ...prevChats[chatIndex] };
+                        updatedChat.messages.push(newMessage);
+                        updatedChat.lastMessageAt = newMessage.createdAt;
+    
+                        // Ensure seenBy field in the updatedChat is unique
+                        updatedChat.messages = updatedChat.messages.map(message => {
+                            message.seenBy = [...new Set(message.seenBy)];
+                            return message;
+                        });
+    
+                        const updatedChats = [...prevChats];
+                        updatedChats[chatIndex] = updatedChat;
+                        return updatedChats;
+                    }
+                    return prevChats;
+                });
+            };
+    
+            channel.bind("new-message", handleMessage);
+    
+            return () => {
+                channel.unbind("new-message", handleMessage);
+                pusherClient.unsubscribe(chatId);
+            };
+        }
+    }, [user, chatId]);
+    
     return loading ? (
         <div className="flex justify-center -mt-16 items-center h-full">
             <div className="loader"></div>
         </div>
     ) : (
         <div className="flex flex-row h-full">
-            <div className="flex flex-col min-w-[300px] w-1/4 h-full border-r text-white">
-                <div className="flex justify-center w-full mt-5 min-w rounded-full relative">
-                    <button
-                        onClick={() => { inputRef.current.focus(); }}
-                        className="absolute -translate-y-1/2 left-[10px] xl:ml-3 top-1/2 z-10"
-                    >
-                        <Search className="" sx={{ color: "white" }} />
-                    </button>             
-                    <input 
-                        className="border glass-effect rounded-full w-[350px] opacity-85 h-9 px-[33px]" 
-                        style={{ backgroundColor: "rgb(30, 30, 30)" }}
-                        placeholder="Search..."
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
-                        ref={inputRef}
-                        value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                    />
-                </div>
-                {search ? (
-                    <Contacts value={searchValue} contacts={contacts} search={search} currentUserId={user._id} />
-                ) : (
-                    <Contacts value={searchValue} contacts={contacts} search={search} currentUserId={user._id} />
-                )}
-            </div>
-            <div className="flex flex-col w-3/4">
-                <div className="text-white flex flex-col">
-                    <div>
-
-                    </div>
-                </div>
-            </div>
+            <ChatList currentUserId={user?._id} chats={chats} />
+            <ChatDetail chatId={chatId} currentUserId={user?._id} others={others} chatDetail={allMessages} />
         </div>
     );
 };
 
-export default ChatDetail;
+export default ChatPage;

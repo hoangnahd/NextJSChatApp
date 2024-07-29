@@ -1,3 +1,5 @@
+// RootLayout.jsx
+
 import Provider from "@/components/Provider"
 import TopBar from "@/components/TopBar"
 import "../globals.css";
@@ -17,8 +19,10 @@ export default function RootLayout({
       <body className="bg-black">
         <Provider>
           <TopBar />
-           {children}
-        </Provider>   
+          <div className="main-content">
+            {children}
+          </div>
+        </Provider>
       </body>
     </html>
   )

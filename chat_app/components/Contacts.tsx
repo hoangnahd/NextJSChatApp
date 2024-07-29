@@ -1,13 +1,34 @@
 "use client"
-import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { FixedImage } from "./FIxedImage"
 
-export const Contacts = ({search, value, contacts, currentUserId}) => {
-    const containerRef = useRef(null);
-    const [imageWidth, setImageWidth] = useState(0);
-    const router = useRouter();
-    
+export const Contacts = ({value ,currentUserId}) => {
+    const router = useRouter(); 
+    const [contacts, setContacts] = useState([]);
+
+    const getContacts = async () => {
+        try {
+            const res = await fetch(`/api/users/search/${value ? value : "!@"}`);
+            if (!res.ok) {
+                throw new Error(`Error: ${res.status}`);
+            }
+            const data = await res.json();
+            let filteredContacts = [];
+            for (let i = 0; i < data.length; i++) {
+                if (data[i]._id !== currentUserId) { // Exclude current user
+                    filteredContacts.push(data[i]);
+                }
+            }
+            setContacts(filteredContacts); // Set filtered contacts
+        } catch (error) {
+            console.error("Failed to fetch contacts:", error);
+        }
+    };
+
+    useEffect(() => {
+      getContacts();
+    }, []);
     const createChat = async (contactId) => {
         try {
             const res = await fetch("/api/chats", {
@@ -33,14 +54,7 @@ export const Contacts = ({search, value, contacts, currentUserId}) => {
         }
     };
 
-    useEffect(() =>  {
-        if (containerRef.current) {
-            const containerWidth = containerRef.current.clientWidth;
-            setImageWidth(containerWidth * 2); 
-        }
-    }, [containerRef]);
-
-    return search ? (
+    return (
         <div className="flex flex-col mt-2 px-3" >
             {value && <div className="px-2">Searching for {value}</div>}
             {!contacts ? (
@@ -49,7 +63,7 @@ export const Contacts = ({search, value, contacts, currentUserId}) => {
                 </div>
             ) : (
                 <div className="flex flex-col gap-2 items-start">
-                    <div className="flex flex-col gap-2 mt-5 w-full">
+                    <div className="flex flex-col gap-2 mt-1 w-full">
                         {contacts.map((user) => (
                             <button 
                                 key={user._id}
@@ -58,12 +72,11 @@ export const Contacts = ({search, value, contacts, currentUserId}) => {
                                 }}
                                 className="flex items-center space-x-2 w-full hover:bg-zinc-700 transition duration-200 ease-in-out rounded-xl p-2"
                             >
-                                <div className="overflow-hidden rounded-full w-[50px] h-[50px]" ref={containerRef}>
-                                    <Image 
+                                <div className="overflow-hidden rounded-full w-[50px] h-[50px]">
+                                    <FixedImage 
                                         className="object-cover w-full h-full" 
-                                        src={user?.profileImage || "/assets/person.jpg"} 
-                                        alt="user" 
-                                        width={imageWidth ? imageWidth : 250} 
+                                        src={user?.profileImage || "/assets/person.jpg"}
+                                        width={250} 
                                         height={250}
                                     />
                                 </div>
@@ -75,10 +88,6 @@ export const Contacts = ({search, value, contacts, currentUserId}) => {
                     </div>
                 </div>
             )}           
-        </div>
-    ) : (
-        <div >
-            
         </div>
     )
 }

@@ -21,12 +21,13 @@ export const POST = async (req) => {
             const newChat = await new Chat(chatData)
             await newChat.save();
 
-            await User.findByIdAndUpdate(currentUserId, {
-                $addToSet: {
-                    chats:newChat
-                }
-            }, {new: true});
-
+            // Update each member to include the new chat
+            await Promise.all(newChat.members.map(async (member) => {
+                // Ensure that member is an object with an id property
+                await User.findByIdAndUpdate(member, {
+                    $addToSet: { chats: newChat }
+                }, { new: true });
+            }));
             return new Response(JSON.stringify(newChat), {status: 200})
         }
         return new Response(JSON.stringify(chat), {status: 200})

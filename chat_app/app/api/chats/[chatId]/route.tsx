@@ -2,6 +2,7 @@ import { connectToDb } from "@/mongodb";
 import Chat from "@/model/Chat";
 import User from "@/model/User";
 import Message from "@/model/Message";
+import mongoose from "mongoose";
 export const GET = async (req, {params}) => {
     try {
 
@@ -19,7 +20,6 @@ export const GET = async (req, {params}) => {
                 model: User
             }
         }).exec();
-
         return new Response(JSON.stringify(chat), {status: 200});
     } catch(error) {
         console.log(error);
@@ -31,14 +31,21 @@ export const POST = async (req, {params}) => {
     try {
         await connectToDb();
         const body = await req.json();
-        const currentUserId = body;
+        const {currentUserId} = body;
         const {chatId} = params;
 
+        const userId = new mongoose.Types.ObjectId(currentUserId);
+        const chatIdObj = new mongoose.Types.ObjectId(chatId);
+
+        console.log(`Updating messages for chat ${chatId} with user ${currentUserId}`);
         await Message.updateMany(
-            {chat: chatId}, {
-            seenBy: {$addToSet: {seenBy: currentUserId}}
-        })
-        return new Response("Updated user seen all messages", {status: 200})
+            { chat: chatIdObj },
+            { $addToSet: { seenBy: userId } }
+        );
+        console.log(`Updated messages for chat ${chatId}`);
+
+
+        return new Response("Updated user seen all messages", { status: 200 });
 
     } catch(error) {
         console.log(error);

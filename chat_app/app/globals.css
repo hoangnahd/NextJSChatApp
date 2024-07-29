@@ -37,11 +37,46 @@
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255);
 }
+/* globals.css */
 
-/* HTML: <div class="loader"></div> */
 body, html {
+  margin: 0;
+  padding: 0;
   height: 100%;
+  box-sizing: border-box;
 }
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-bar {
+  height: 70px; /* Adjust this to the actual height of your TopBar */
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+.modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-content {
+  flex: 1;
+  margin-top: 60px; /* Same height as the TopBar */
+  overflow: auto; /* Ensures content is scrollable if needed */
+  display: flex;
+  flex-direction: column;
+}
+
 .loader {
   height: 200px; /* Increase the height */
   aspect-ratio: 1;
