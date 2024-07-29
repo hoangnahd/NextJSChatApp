@@ -20,7 +20,7 @@
   background-color: rgba(255, 255, 255, 0.3); /* Background color on hover */
 }
 .input-icon {
-  @apply -ml-[50px] -mt-[9px] z-10 w-10 h-7
+  @apply -ml-[50px] -mt-[9px] z-10 w-9 h-7
 }
 .logo {
   @apply font-bold lg:text-6xl mb-5 text-5xl

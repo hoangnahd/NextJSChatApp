@@ -73,19 +73,15 @@ const ChatPage = () => {
         }
     }, [chatId, user]);
     useEffect(() => {
-        if (chatId) 
+        if (allMessages) 
             SeenMessage();     
-    }, [chatId]);
+    }, [allMessages]);
 
     useEffect(() => {
         if (user && chatId) {
             const channel = pusherClient.subscribe(chatId.toString());
     
             const handleMessage = (newMessage) => {
-                // Add currentUserId to the seenBy field if it's not already there
-                if (!newMessage.seenBy.includes(user?._id)) {
-                    newMessage.seenBy.push(user?._id);
-                }
     
                 // Update the chatDetail state with the new message
                 setAllMessages((prevChat) => ({

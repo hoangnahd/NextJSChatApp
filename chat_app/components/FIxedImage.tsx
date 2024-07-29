@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
-export const FixedImage = ({src, className, width, height}) => {
+export const FixedImage = ({src, className, width, height, title=""}) => {
     const [imageWidth, setImageWidth] = useState(0);
     const containerRef = useRef(null);
     useEffect(() => {
@@ -25,6 +25,7 @@ export const FixedImage = ({src, className, width, height}) => {
             height={height}
             className={className}
             ref={containerRef}
+            title={title}
         />  
     )
 }

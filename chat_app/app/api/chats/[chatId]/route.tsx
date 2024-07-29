@@ -36,13 +36,10 @@ export const POST = async (req, {params}) => {
 
         const userId = new mongoose.Types.ObjectId(currentUserId);
         const chatIdObj = new mongoose.Types.ObjectId(chatId);
-
-        console.log(`Updating messages for chat ${chatId} with user ${currentUserId}`);
         await Message.updateMany(
             { chat: chatIdObj },
             { $addToSet: { seenBy: userId } }
         );
-        console.log(`Updated messages for chat ${chatId}`);
 
 
         return new Response("Updated user seen all messages", { status: 200 });

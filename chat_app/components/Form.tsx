@@ -1,5 +1,5 @@
 "use client"
-import { EmailOutlined, LockOutlined } from "@mui/icons-material"
+import { EmailOutlined, LockOutlined, Person } from "@mui/icons-material"
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -38,22 +38,23 @@ const Form = ({type}) => {
     }
 
     return (
-        <div className="flex justify-center h-screen p-t-10 p-2 min-h-[800px]">
+        <div className="flex justify-center h-screen p-t-10 p-2 min-h-[800px] min-w-[500px]">
              <div className="form" >
                 <div className="logo"> NextJS App Chat </div>
                 {type == "login" ? (
                     <form onSubmit={handleSubmit(HanldeSubmit)} >
-                        <div className="flex items-center relative">
+                        <div className="relative flex items-center">
                             <input
-                                type="email" 
-                                placeholder="Enter your email" 
-                                className="input"
+                                type="email"
+                                placeholder="Enter your email"
+                                className="input pl-10"
                                 {...register("email", {
-                                    required:"Email is required"
+                                    required: "Email is required"
                                 })}
                             />
-                            <EmailOutlined sx={{color:"white"}} className="input-icon"/>
+                            <EmailOutlined sx={{ color: "white" }} className="absolute right-4 -mt-2" />
                         </div>
+
                         {errors.email && 
                             (<p className="error-msg mb-4 -mt-2">
                                 {errors.email.message}
@@ -69,7 +70,7 @@ const Form = ({type}) => {
                                     
                                 })}
                             />
-                            <LockOutlined sx={{color:"white"}} className="input-icon"/>
+                            <LockOutlined sx={{color:"white"}} className="absolute right-4 -mt-2"/>
                         </div>
                         
                         <div className="flex flex-row w-full mb-3 -mt-1">
@@ -85,65 +86,81 @@ const Form = ({type}) => {
                         
                     </form>
                 ) : (
-                <form className="flex flex-col items-center" onSubmit={handleSubmit(HanldeSubmit)}>              
-                    <input 
-                        type="email" 
-                        placeholder="Enter email" 
-                        className="input"
-                        {...register("email", {
-                            required: "Email is required"
-                        })}
-                    />
+                <form className="flex flex-col items-center" onSubmit={handleSubmit(HanldeSubmit)}>
+                    <div className="relative flex items-center">
+                        <input 
+                            type="email" 
+                            placeholder="Enter email" 
+                            className="input"
+                            {...register("email", {
+                                required: "Email is required"
+                            })}
+                        />
+                        <EmailOutlined sx={{ color: "white" }} className="absolute right-4 -mt-2" />
+                    </div>              
+                    
                     {errors.email && 
                         (<p className="error-msg -mt-2">
                             {errors.email.message}
                         </p>)
                     }
-                    <input 
-                        type="text" 
-                        placeholder="Enter your name" 
-                        className="input"
-                        {...register("username", {
-                            required:"Username is required"
-                        })}
-                    />
+                    <div className="relative flex items-center">
+                        <input 
+                            type="text" 
+                            placeholder="Enter your name" 
+                            className="input"
+                            {...register("username", {
+                                required:"Username is required"
+                            })}
+                        />
+                        <Person sx={{ color: "white" }} className="absolute right-4 -mt-2" />
+                    </div>
+                    
                     {errors.email && 
                         (<p className="error-msg -mt-2">
                             {errors.username.message}
                         </p>)
                     }
-                    <input 
-                        type="password" 
-                        placeholder="Enter password" 
-                        className="input"
-                        {...register("password", {
-                            required: "Password is required",
-                            validate: (value) => {
-                                if (
-                                    value.length < 5 ||
-                                    !value.match(/[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]/)
-                                ) {
-                                    return "Password must be at least 5 characters and contain at least one special character";
+                    <div className="relative flex items-center">
+                        <input 
+                            type="password" 
+                            placeholder="Enter password" 
+                            className="input"
+                            {...register("password", {
+                                required: "Password is required",
+                                validate: (value) => {
+                                    if (
+                                        value.length < 5 ||
+                                        !value.match(/[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]/)
+                                    ) {
+                                        return "Password must be at least 5 characters and contain at least one special character";
+                                    }
                                 }
-                            }
-                        })}
-                    />
+                            })}
+                        />
+                        <LockOutlined sx={{ color: "white" }} className="absolute right-4 -mt-2" />
+                    </div>
+                    
                     {errors.password && (
                         <p className="error-msg -mt-2">
                             {errors.password.message}
                         </p>
                     )}
-                    <input 
-                        type="password" 
-                        placeholder="Confirm password" 
-                        className="input"
-                        {...register("confirmPassword", {
-                            required: "Please confirm your password",
-                            validate: (value) =>
-                            value === getValues("password") ||
-                            "The passwords do not match",
-                        })}
-                    />
+                    <div className="relative flex items-center">
+                        <input 
+                            type="password" 
+                            placeholder="Confirm password" 
+                            className="input"
+                            {...register("confirmPassword", {
+                                required: "Please confirm your password",
+                                validate: (value) =>
+                                value === getValues("password") ||
+                                "The passwords do not match",
+                            })}
+                        />
+                        <LockOutlined sx={{ color: "white" }} className="absolute right-4 -mt-2" />
+                    </div>
+                    
                     {errors.confirmPassword && (
                         <p className="error-msg -mt-2">
                             {errors.confirmPassword.message}
