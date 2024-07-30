@@ -22,6 +22,10 @@ const MessageSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    audio: {
+        type: String,  // Base64 string or URL/path
+        default: ""
+    },
     createdAt: {
         type: Date,
         default: Date.now

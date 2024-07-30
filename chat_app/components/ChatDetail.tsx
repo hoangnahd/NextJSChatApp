@@ -1,18 +1,22 @@
 "use client";
-import { useState, useRef } from "react";
-import { Call, VideoCall, InfoOutlined, Link, ImageOutlined, Mic, Send } from "@mui/icons-material";
+import { useState, useRef, useEffect } from "react";
+import { Call, VideoCall, InfoOutlined, Link, ImageOutlined, Mic, Send, Stop, DisabledByDefault } from "@mui/icons-material";
 import { CldUploadButton } from "next-cloudinary";
 import { ChatBox } from "./ChatBox";
 import { FixedImage } from "./FIxedImage";
 import { format } from 'date-fns';
-import { AudioRecorderComponent } from "./AudioRecorder ";
+import AudioRecorderComponent from "./AudioRecorderComponent";
+
 
 export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
     const [message, setMessage] = useState(""); 
     const inputRef = useRef(null);   
+    const [isRecord, setIsRecord] = useState(false);
+    
 
     const SendMessage = async (result) => {
         try {
+
             if (!message && !result?.info?.secure_url) {
                 console.log("There is nothing to send!");
                 return;
@@ -45,7 +49,10 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
             }
         }
     };
-
+    const handleRecordingStop = (audioBase64) => {
+        setRecordedAudio(audioBase64);
+        SendMessage(audioBase64); // Automatically send the recorded audio
+    };
     const handleSendClick = () => {
         SendMessage({});
     };
@@ -56,7 +63,7 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
         const oneMinuteAgo = new Date(Date.now() - 1000 * 60);
         return new Date(lastActive) > oneMinuteAgo;
     };
-      
+
     const formatDate = (date) => {
         if (!isValidDate(date)) return 'Invalid date';
     
@@ -115,35 +122,67 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
             </div>
             <div className="flex justify-center w-full mb-5 text-white px-10">
                 <div className="relative w-full">
-                    <input 
-                        className="border glass-effect rounded-full w-full opacity-85 h-14 px-12"
-                        style={{ backgroundColor: "rgb(30, 30, 30)" }}
-                        placeholder="message..."
-                        ref={inputRef}
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={handleEnterPress}
-                    />
-                    <div className="absolute inset-y-0 left-4 flex items-center cursor-pointer">
-                        <Link style={{ color: 'white' }} />
-                    </div>
-                    {message && (
+                    {!isRecord ? 
+                        <input 
+                            className="border glass-effect rounded-full w-full opacity-85 h-14 px-12"
+                            style={{ backgroundColor: "rgb(30, 30, 30)" }}
+                            placeholder="message..."
+                            ref={inputRef}
+                            value={message}
+                            onChange={(e) => setMessage(e.target.value)}
+                            onKeyDown={handleEnterPress}
+                        /> : (
+                            <AudioRecorderComponent onStop={handleRecordingStop} />
+
+                    )}
+                    {!isRecord && 
+                        <div className="absolute inset-y-0 left-4 flex items-center cursor-pointer">
+                            <Link style={{ color: 'white' }} />
+                        </div>
+                    }
+                    
+                    {message ? (
                         <button 
-                            className="absolute inset-y-0 right-[76px] flex items-center"
+                            className="absolute inset-y-0 right-[30px] flex items-center"
                             onClick={handleSendClick}
                         >
                             <Send style={{ color: 'white' }} />
                         </button>
+                    ) : (
+                        <div className="w-full">
+                            
+                            {!isRecord ? 
+                                (<div >
+                                    <CldUploadButton
+                                        options={{ maxFiles: 1 }}
+                                        onSuccess={SendMessage}
+                                        uploadPreset="assa7iwc"
+                                        className="absolute inset-y-0 right-[70px] flex items-center"
+                                    >
+                                        <ImageOutlined style={{ color: 'white' }} />
+                                    </CldUploadButton>
+                                    <div onClick={() => setIsRecord(!isRecord)}>
+                                        <Mic
+                                            className="absolute inset-y-0 right-[30px] mt-4 flex cursor-pointer items-center" 
+                                            style={{ color: 'white' }}
+                                        />
+                                    </div>
+                                    
+                                </div>) : (
+                                    <div onClick={() => {setIsRecord(!isRecord)}}>
+                                        <DisabledByDefault
+                                            className="absolute inset-y-0 right-[30px] mt-4 flex cursor-pointer items-center" 
+                                            style={{ color: 'white' }}
+                                        />
+                                    </div>
+                                )
+                            }
+                            
+                        </div>
+                        
                     )}
-                    <CldUploadButton
-                        options={{ maxFiles: 1 }}
-                        onSuccess={SendMessage}
-                        uploadPreset="assa7iwc"
-                        className="absolute inset-y-0 right-[70px] flex items-center"
-                    >
-                        <ImageOutlined style={{ color: 'white' }} />
-                    </CldUploadButton>
-                    <AudioRecorderComponent />
+                    
+
                 </div>
             </div>
         </div>
