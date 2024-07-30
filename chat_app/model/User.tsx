@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema({
   chats: {
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Chat" }],
     default: [],
+  },
+  lastActive: {
+    type: Date,
+    default: Date.now,
   }
 });
 

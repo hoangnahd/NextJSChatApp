@@ -19,3 +19,17 @@ export const POST = async (req, {params}) => {
         return new Response("Failed to update user", { status: 500 })
     }
 }
+export const GET = async (req, { params }) => {
+    try {
+        await connectToDb();
+        const {userId} = params;
+        const user = await User.findByIdAndUpdate(userId, { lastActive: Date.now() });
+        if (!user) {
+          return new Response("User not found!", {status: 404});
+        }
+
+        return new Response(JSON.stringify(user), {status: 200});
+    } catch(error) {
+        return new Response("Error to update user's status", {status: 400}); 
+    }
+}

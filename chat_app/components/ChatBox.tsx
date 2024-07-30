@@ -21,6 +21,10 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
             return messageTime.format('DD MMM YYYY'); // Different day, show date
         }
     }
+    const isActive = (lastActive) => {
+        const oneMinuteAgo = new Date(Date.now() - 1000 * 60);
+        return new Date(lastActive) > oneMinuteAgo;
+    };
     useEffect(() => {
         // Smoothly scroll to the bottom of the chat when new messages are added
         bottomRef.current?.scrollIntoView({
@@ -31,29 +35,51 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
     }, [chatDetail?.messages]);
     
     return (
-        <div className="flex flex-col flex-auto h-full p-2">
+        <div className="flex flex-col flex-auto h-full p-2 relative">
+            
             <div className="flex flex-col flex-auto flex-shrink-0 rounded-2xl h-full">
                 <div className="flex flex-col h-full overflow-x-auto mb-1">
                     <div className="flex flex-col h-full">
-                        <div className="grid grid-cols-12"> {/* Fixed typo: grid-col-12 to grid-cols-12 */}
+                        <div className="grid grid-cols-12">
+                            <div className="col-span-12 flex flex-col items-center gap-5 pt-3 pb-12">   
+                                <div className="overflow-hidden rounded-full w-[200px] h-[200px] ">
+                                    <FixedImage
+                                        className="object-cover w-full h-full cursor-pointer"
+                                        src={others[0]?.profileImage || "/assets/person.jpg"}
+                                        width={300}
+                                        height={300}
+                                    />
+                                </div>
+                                <div className="text-2xl font-bold">{others[0]?.username}</div>
+                            </div>
+                            
                             {chatDetail.messages.map((Message, index) => (
                                 <div
                                     key={index}
                                     className={`p-1 rounded-lg ${Message.sender._id === currentUserId
                                         ? `col-start-6 col-end-13`
                                         : "col-start-1 col-end-8"}`}
-                                >                                                                    
+                                >
                                     <div className={`flex flex-col ${Message.sender._id === currentUserId ? 'items-end' : 'items-start'} mb-3`}>
-                                        <div className={`flex items-center ${Message.sender._id === currentUserId ? 'flex-row-reverse' : 'flex-row'}`} title={formatDateTime(Message.createdAt)}>
+                                        <div className={`relative flex items-center ${Message.sender._id === currentUserId ? 'flex-row-reverse' : 'flex-row'}`} title={formatDateTime(Message.createdAt)}>
                                             {Message.sender._id !== currentUserId && (
-                                                <div className="overflow-hidden rounded-full w-[50px] h-[50px]">
-                                                    <FixedImage
-                                                        className="object-cover w-full h-full cursor-pointer"
-                                                        src={others[0]?.profileImage || "/assets/person.jpg"}
-                                                        width={250}
-                                                        height={250}
-                                                        title={Message.sender.username}
-                                                    />
+                                                <div className="relative">
+                                                    <div className="overflow-hidden rounded-full w-[50px] h-[50px] mb-2">
+                                                        <FixedImage
+                                                            className="object-cover w-full h-full cursor-pointer"
+                                                            src={others[0]?.profileImage || "/assets/person.jpg"}
+                                                            width={50}
+                                                            height={50}
+                                                            title={Message.sender.username}
+                                                        />
+                                                    </div>
+                                                    {isActive(others[0]?.lastActive) && 
+                                                        <img 
+                                                            className="absolute -mb-2 bottom-0 left-8 w-[22px] h-[22px] object-cover" 
+                                                            src="/status-active.svg"
+                                                            alt="Status"
+                                                        />
+                                                    }
                                                 </div>
                                             )}
                                             {Message.text && (
@@ -69,29 +95,27 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
                                                 <MessageWithImage currentUserId={currentUserId} Message={Message} />
                                             )}
                                         </div>
-                                        {
-                                            lastSeenMsg === Message 
-                                         && lastSeenMsg?.sender?._id === currentUserId 
-                                         && others[0]?.profileImage
-                                         && (
-                                            <div className="overflow-hidden rounded-full w-[20px] h-[20px] mt-1 mr-1 cursor-pointer">
-                                                <Image
-                                                    className="object-cover w-full h-full"
-                                                    src={others[0]?.profileImage || "/assets/person.jpg"}
-                                                    width={300}
-                                                    height={300}
-                                                    alt="seen indicator"
-                                                    title={others[0]?.username}
-                                                />
-                                            </div>
-                                        )}
+                                        {lastSeenMsg === Message 
+                                            && lastSeenMsg?.sender?._id === currentUserId 
+                                            && others[0]?.profileImage
+                                            && (
+                                                <div className="overflow-hidden rounded-full w-[20px] h-[20px] mt-1 mr-1 cursor-pointer">
+                                                    <Image
+                                                        className="object-cover w-full h-full"
+                                                        src={others[0]?.profileImage || "/assets/person.jpg"}
+                                                        width={200}
+                                                        height={200}
+                                                        alt="seen indicator"
+                                                        title={others[0]?.username}
+                                                    />
+                                                </div>
+                                            )}
                                     </div>
-
                                 </div>
                             ))}
-                            {/* Bottom ref for smooth scrolling */}
                             <div ref={bottomRef} />
-                        </div>        
+                        </div>
+      
                     </div>
                 </div>
             </div>

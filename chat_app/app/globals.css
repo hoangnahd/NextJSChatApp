@@ -6,7 +6,7 @@
   @apply flex flex-col justify-center items-center lg:w-1/2 h-4/5 w-full gap-3 border text-white 
 }
 .p-t-10 {
-  padding-top: 10vh; /* This sets the padding-top to 30% of the viewport height */
+  padding-top: 12vh; /* This sets the padding-top to 30% of the viewport height */
 }
 .input {
   @apply border glass-effect rounded-full py-4 px-4 mb-3 bg-opacity-5 transition-opacity;
@@ -52,7 +52,7 @@ body {
 }
 
 .top-bar {
-  height: 70px; /* Adjust this to the actual height of your TopBar */
+  height: 80px; /* Adjust this to the actual height of your TopBar */
   width: 100%;
   position: fixed;
   top: 0;
@@ -98,10 +98,40 @@ body {
 .loader:after {
   animation-duration: .7s;
 }
+.typewriter {
+  overflow: hidden; /* Ensures that the text doesn't overflow during animation */
+  white-space: nowrap; /* Ensures the text doesn't wrap to the next line */
+  animation: typing 4s steps(40, end), blink-caret .75s step-end infinite;
+}
 
-@keyframes l4 {
-  0%,
-  70% {-webkit-mask-size: 50% 100%}
-  85% {-webkit-mask-size: 50% 0}
-  100% {-webkit-mask-size: 50% 100%}
+.line {
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+.line-1 {
+  animation-delay: 0s;
+}
+
+.line-2 {
+  animation-delay: 2s;
+}
+
+.line-3 {
+  animation-delay: 4s;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: white; }
 }

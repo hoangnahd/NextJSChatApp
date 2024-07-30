@@ -23,7 +23,10 @@ export const ChatList = ({currentUserId, chats}) => {
     const isValidDate = (date) => {
         return !isNaN(new Date(date).getTime());
     };
-    
+    const isActive = (lastActive) => {
+        const oneMinuteAgo = new Date(Date.now() - 1000 * 60);
+        return new Date(lastActive) > oneMinuteAgo;
+    };
     const formatDate = (date) => {
         if (!isValidDate(date)) return 'Invalid date';
     
@@ -39,13 +42,15 @@ export const ChatList = ({currentUserId, chats}) => {
         return format(new Date(date), 'PPP'); // Default formatting
     };
     return (
-        <div className="flex flex-col min-w-[380px] w-1/4 h-full border-r border-zinc-600 text-white">
+        <div className="flex flex-col min-w-[380px] max-w-[380px] h-full border-r border-zinc-600 text-white mt-5">
             <div className="flex justify-center w-full mt-5 min-w rounded-full relative">
                 <button
                     onClick={() => { inputRef.current.focus(); }}
                     className="absolute -translate-y-1/2 left-[10px] xl:ml-3 top-1/2 z-10"
                 >
-                <Search sx={{ color: "white" }} />
+                <Search 
+                    className="absolute -mt-3"
+                    sx={{ color: "white" }} />
                 </button>             
                 <input className="border glass-effect rounded-full w-[350px] opacity-85 h-9 px-[33px]" 
                     style={{ backgroundColor: "rgb(30, 30, 30)" }}
@@ -81,9 +86,9 @@ export const ChatList = ({currentUserId, chats}) => {
                                         onClick={() => {
                                             router.push(`/chats/${chat._id}`);
                                         }} // Use chat._id for the chat creation
-                                        className="flex items-center space-x-2 hover:bg-zinc-700 transition duration-200 ease-in-out rounded-xl p-2 w-full"
+                                        className="flex items-center relative space-x-2 hover:bg-zinc-700 transition duration-200 ease-in-out rounded-xl p-2 w-full"
                                     >
-                                        <div className="overflow-hidden rounded-full w-[60px] h-[60px]">
+                                        <div className="overflow-hidden rounded-full w-[60px] h-[60px] relative">
                                             <FixedImage 
                                                 className="object-cover w-full h-full" 
                                                 src={otherMember?.profileImage || "/assets/person.jpg"} // Assuming otherMember has profileImage
@@ -91,6 +96,13 @@ export const ChatList = ({currentUserId, chats}) => {
                                                 height={250}
                                             />
                                         </div>
+                                        {isActive(otherMember?.lastActive) && 
+                                            <img 
+                                                className="absolute bottom-0 left-10 w-[25px] h-[25px] object-cover" 
+                                                src="/status-active.svg"
+                                                alt="Status"
+                                            />
+                                        }
                                         <div className="flex flex-col text-white gap-1 flex-1">
                                             <div className="text-lg font-semibold flex items-start">{otherMember?.username}</div> {/* Increased font size for better visibility */}
                                             <div className={`text-sm flex flex-row justify-between items-start pr-4 ${lastMessage.seenBy.length > 1 ?"": (

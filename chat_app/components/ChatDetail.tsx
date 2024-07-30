@@ -4,6 +4,8 @@ import { Call, VideoCall, InfoOutlined, Link, ImageOutlined, Mic, Send } from "@
 import { CldUploadButton } from "next-cloudinary";
 import { ChatBox } from "./ChatBox";
 import { FixedImage } from "./FIxedImage";
+import { format } from 'date-fns';
+import { AudioRecorderComponent } from "./AudioRecorder ";
 
 export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
     const [message, setMessage] = useState(""); 
@@ -34,27 +36,72 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
             console.log('Error sending message:', error);
         }     
     };
+    const handleEnterPress = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevents the default behavior of the Enter key (e.g., form submission)
+            if (message.trim()) { // Ensure message is not just whitespace
+                SendMessage(message); // Call your function here with the current message
+                setMessage(""); // Clear the input field after sending the message
+            }
+        }
+    };
 
     const handleSendClick = () => {
         SendMessage({});
     };
-
+    const isValidDate = (date) => {
+        return !isNaN(new Date(date).getTime());
+    };
+    const isActive = (lastActive) => {
+        const oneMinuteAgo = new Date(Date.now() - 1000 * 60);
+        return new Date(lastActive) > oneMinuteAgo;
+    };
+      
+    const formatDate = (date) => {
+        if (!isValidDate(date)) return 'Invalid date';
+    
+        const now = new Date();
+        const diff = (now - new Date(date)) / 1000; // Difference in seconds
+    
+        if (diff < 60) return "just now";
+        if (diff < 3600) return `${Math.floor(diff / 60)} minute${Math.floor(diff / 60) > 1 ? 's' : ''} ago`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} hour${Math.floor(diff / 3600) > 1 ? 's' : ''} ago`;
+        if (diff < 2592000) return `${Math.floor(diff / 86400)} day${Math.floor(diff / 86400) > 1 ? 's' : ''} ago`;
+        if (diff < 31536000) return `${Math.floor(diff / 2592000)} month${Math.floor(diff / 2592000) > 1 ? 's' : ''} ago`;
+    
+        return format(new Date(date), 'PPP'); // Default formatting
+    };
     return (
-        <div className="flex flex-col w-full h-full justify-between">
+        <div className="flex flex-col w-full h-full justify-between mt-3">
             <div className="text-white flex flex-col w-full py-2 border-b border-zinc-800">
-                <div className="w-full h-16 flex items-center align-middle justify-between px-4">
-                    <div className="flex mt-2">
-                        <div className="overflow-hidden rounded-full w-[60px] h-[60px]">
+                <div className="w-full h-18 flex items-center align-middle justify-between px-4">
+                    <div className="flex mt-2 relative">
+                        <div className="overflow-hidden rounded-full w-[60px] h-[60px] mt-1">
                             <FixedImage 
                                 className="object-cover w-full h-full" 
                                 src={others[0]?.profileImage || "/assets/person.jpg"}  
                                 width={250} 
                                 height={250}
-                            />                
+                            />                                         
                         </div>
-                        <div className="flex items-center ml-1 text-lg">
-                            {others[0]?.username}
+                        <img 
+                            className="absolute -bottom-1 left-10 w-[25px] h-[25px] object-cover" 
+                            src={isActive(others[0]?.lastActive)? "/status-active.svg": "/status-inactive.svg"}  
+                            alt="Status"
+                        />
+                        <div className="flex flex-col justify-center ml-2 text-lg pt-1">
+                            <div className="-mb-1 mt-2 text-lg">
+                                {others[0]?.username}
+                            </div>
+                            <div className="text-[12px] italic">
+                                {isActive(others[0]?.lastActive) ? (
+                                    <div>Active</div>
+                                ) : (
+                                    <div>Last seen {formatDate(others[0]?.lastActive)}</div>
+                                )}
+                            </div>
                         </div>
+                        
                     </div>
                     <div className="flex items-end gap-1 pr-3 cursor-pointer">
                         <Call className="w-10 h-7" />
@@ -75,6 +122,7 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
                         ref={inputRef}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={handleEnterPress}
                     />
                     <div className="absolute inset-y-0 left-4 flex items-center cursor-pointer">
                         <Link style={{ color: 'white' }} />
@@ -91,13 +139,11 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
                         options={{ maxFiles: 1 }}
                         onSuccess={SendMessage}
                         uploadPreset="assa7iwc"
-                        className="absolute inset-y-0 right-12 flex items-center"
+                        className="absolute inset-y-0 right-[70px] flex items-center"
                     >
                         <ImageOutlined style={{ color: 'white' }} />
                     </CldUploadButton>
-                    <div className="absolute inset-y-0 right-4 flex items-center cursor-pointer">
-                        <Mic style={{ color: 'white' }} />
-                    </div>
+                    <AudioRecorderComponent />
                 </div>
             </div>
         </div>

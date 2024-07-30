@@ -7,7 +7,6 @@ export const GET = async (req, {params}) => {
     try {
         await connectToDb();
         const {userId} = params;
-        
         const user = await User.findById(userId).populate({
             path: "chats",
             model: Chat,
@@ -33,3 +32,4 @@ export const GET = async (req, {params}) => {
         return new Response("Failed to fetch chat detail", {status: 400});
     }
 };
+
