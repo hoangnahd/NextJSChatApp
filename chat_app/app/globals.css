@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.form {
+  @apply flex flex-col justify-center items-center lg:w-1/2 h-4/5 w-full gap-3 border text-white 
+}
+.p-t-10 {
+  padding-top: 12vh; /* This sets the padding-top to 30% of the viewport height */
+}
+.input {
+  @apply border glass-effect rounded-full py-4 px-4 mb-3 bg-opacity-5 transition-opacity;
+  transition: background-color 0.2s ease-in-out; /* Transition for background color change */
+  padding-right: 10rem;
+}
+.input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+.input:hover {
+  background-color: rgba(255, 255, 255, 0.3); /* Background color on hover */
+}
+.input-icon {
+  @apply -ml-[50px] -mt-[9px] z-10 w-9 h-7
+}
+.logo {
+  @apply font-bold lg:text-6xl mb-5 text-5xl
+}
+.btn {
+  @apply py-3 rounded-2xl font-bold text-lg -mr-2
+}
+.error-msg {
+  @apply text-sm text-red-500 pl-3 mb-1
+}
+.glass-effect {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255);
+}
+/* globals.css */
+
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+.video-container{
+  max-height: 100%;
+  border: 2px solid black;
+  background-color: #203A49;
+}
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+.top-bar {
+  height: 80px; /* Adjust this to the actual height of your TopBar */
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+.modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  background: transparent;
+  border: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-content {
+  flex: 1;
+  margin-top: 60px; /* Same height as the TopBar */
+  overflow: auto; /* Ensures content is scrollable if needed */
+  display: flex;
+  flex-direction: column;
+}
+
+.loader {
+  height: 200px; /* Increase the height */
+  aspect-ratio: 1;
+  display: grid;
+}
+
+.loader:before,
+.loader:after {
+  content: "";
+  background:
+    radial-gradient(farthest-side, #000 15%, #0000 18%) 0 0 / 50% 100%,
+    radial-gradient(50% 100% at 50% 160%, #fff 95%, #0000) 0 0 / 50% 50%,
+    radial-gradient(50% 100% at 50% -60%, #fff 95%, #0000) 0 100% / 50% 50%;
+  background-repeat: repeat-x;
+  -webkit-mask: radial-gradient(50% 100%, #000 95%, #0000) 0 100% / 50% 0% repeat-x;
+  animation: l4 1s infinite alternate ease-in;
+}
+
+.loader:after {
+  animation-duration: .7s;
+}
+.typewriter {
+  overflow: hidden; /* Ensures that the text doesn't overflow during animation */
+  white-space: nowrap; /* Ensures the text doesn't wrap to the next line */
+  animation: typing 4s steps(40, end), blink-caret .75s step-end infinite;
+}
+
+.line {
+  opacity: 0;
+  animation: fadeIn 1s forwards;
+}
+
+.line-1 {
+  animation-delay: 0s;
+}
+
+.line-2 {
+  animation-delay: 2s;
+}
+
+.line-3 {
+  animation-delay: 4s;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: white; }
+}
