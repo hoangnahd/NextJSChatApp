@@ -10,11 +10,14 @@ export const connectToDb = async () => {
             return
         }
         else {
-            mongoose.connect(process.env.MONGODB_URL, {
+            const dbUrl = process.env.MONGODB_URL;
+            if (!dbUrl) {
+                throw new Error("MONGODB_URL is not defined");
+            }
+    
+            await mongoose.connect(dbUrl, {
                 dbName: "Cluster0",
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            })
+            });
             isConnected = true;
             console.log("DB is already connected");
         }

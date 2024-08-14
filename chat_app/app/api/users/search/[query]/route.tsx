@@ -1,7 +1,7 @@
 import User from "@/model/User";
 import { connectToDb } from "@/mongodb";
 
-export const GET = async (req, { params }) => {
+export const GET = async (req:any, { params }:{params:any}) => {
     try {
         await connectToDb();
         const { query } = params;

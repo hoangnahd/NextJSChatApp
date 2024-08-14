@@ -8,13 +8,13 @@ import { format } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid'; // Import UUID library
 import AudioRecorder from "./AudioRecorder";
 
-export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
+export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }: { chatId:any, currentUserId:any, others:any, chatDetail:any}) => {
     const [message, setMessage] = useState(""); 
     const inputRef = useRef(null);   
     const [isRecord, setIsRecord] = useState(false);
     const [recordedAudio, setRecordedAudio] = useState(null);
-      
-    const SendMessage = async (result) => {
+ 
+    const SendMessage = async (result:any,) => {
         try {
             // Check if there's anything to send
             if (!message && !result?.info?.secure_url && !recordedAudio) {
@@ -40,7 +40,6 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
 
             if (res.ok) {
                 setMessage("");
-                setRecordedAudio(null);
             } else {
                 console.log("Failed to send message");
             }
@@ -49,7 +48,7 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
         }
     };
     
-    const handleEnterPress = (e) => {
+    const handleEnterPress = (e:any,) => {
         if (e.key === "Enter") {
             e.preventDefault(); // Prevents the default behavior of the Enter key (e.g., form submission)
             if (message.trim()) { // Ensure message is not just whitespace
@@ -58,24 +57,28 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
             }
         }
     };
-    const handleRecordingStop = (audio) => {
+    const handleRecordingStop = (audio:any,) => {
         setRecordedAudio(audio); // Store the Base64 string of the audio
     }; 
     const handleSendClick = () => {
         SendMessage({});
     };
-    const isValidDate = (date) => {
-        return !isNaN(new Date(date).getTime());
-    };
-    const isActive = (lastActive) => {
+    const isValidDate = (date:any) => !isNaN(new Date(date).getTime());
+
+    const isActive = (lastActive:any) => {
         const oneMinuteAgo = new Date(Date.now() - 1000 * 60);
         return new Date(lastActive) > oneMinuteAgo;
     };
-    const formatDate = (date) => {
-        if (!isValidDate(date)) return 'Invalid date';
+
+    const formatDate = (date: Date) => {
+        // Convert date to Date object if it's a string
+        const parsedDate = typeof date === 'string' ? new Date(date) : date;
+    
+        // Validate if the date is valid
+        if (!isValidDate(parsedDate)) return 'Invalid date';
     
         const now = new Date();
-        const diff = (now - new Date(date)) / 1000; // Difference in seconds
+        const diff = (now.getTime() - parsedDate.getTime()) / 1000; // Difference in seconds
     
         if (diff < 60) return "just now";
         if (diff < 3600) return `${Math.floor(diff / 60)} minute${Math.floor(diff / 60) > 1 ? 's' : ''} ago`;
@@ -83,8 +86,9 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
         if (diff < 2592000) return `${Math.floor(diff / 86400)} day${Math.floor(diff / 86400) > 1 ? 's' : ''} ago`;
         if (diff < 31536000) return `${Math.floor(diff / 2592000)} month${Math.floor(diff / 2592000) > 1 ? 's' : ''} ago`;
     
-        return format(new Date(date), 'PPP'); // Default formatting
+        return format(parsedDate, 'PPP');
     };
+
     const sendCall = async () => {
         try {
             const formData = new FormData();
@@ -105,7 +109,6 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
             console.log('Error sending message:', error);
         }
     }
-      
     return (
         <div className="flex flex-col w-full h-full justify-between mt-3">
             <div className="text-white flex flex-col w-full py-2 border-b border-zinc-800">
@@ -195,20 +198,29 @@ export const ChatDetail = ({ chatId, currentUserId, others, chatDetail }) => {
                                         </div>
                                         ) : (
                                             <div className="w-full"> 
-                                                <div className="absolute right-[70px] top-4 flex items-center" onClick={() => setIsRecord(false)}>
-                                                    <Delete  style={{ color: 'white' }} />
-                                                </div>                          
-                                                
-                                                <div onClick={() => {
-                                                        setIsRecord(!isRecord)
-                                                        SendMessage(recordedAudio);
+                                                <div
+                                                    className={`absolute top-4 flex items-center ${recordedAudio ? 'right-[70px]' : 'right-[30px]'}`}
+                                                    onClick={() => {
+                                                        setIsRecord(false);
                                                     }}
                                                 >
-                                                    <Send
-                                                        className="absolute inset-y-0 right-[30px] mt-4 flex cursor-pointer items-center" 
-                                                        style={{ color: 'white' }}
-                                                    />
-                                                </div>                      
+                                                    <Delete style={{ color: 'white' }} />
+                                                </div>                          
+                                                                                            
+                                                {recordedAudio && (
+                                                    <div
+                                                        onClick={() => {
+                                                            setIsRecord(!isRecord);
+                                                            SendMessage(recordedAudio);
+                                                            setRecordedAudio(null);
+                                                        }}
+                                                    >
+                                                        <Send
+                                                            className="absolute inset-y-0 right-[30px] mt-4 flex cursor-pointer items-center" 
+                                                            style={{ color: 'white' }}
+                                                        />
+                                                    </div>
+                                                )}                     
                                             </div>
                                     )
                                 )}

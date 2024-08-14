@@ -1,3 +1,4 @@
+"use client"
 import React, { useEffect, useRef } from 'react';
 import { IRemoteVideoTrack } from 'agora-rtc-sdk-ng';
 
@@ -10,11 +11,19 @@ const RemoteVideoTrack: React.FC<RemoteVideoTrackProps> = ({ track }) => {
 
   useEffect(() => {
     if (videoRef.current) {
-      track.play(videoRef.current);
+      try {
+        track.play(videoRef.current);
+      } catch (error) {
+        console.error('Error playing the remote video track:', error);
+      }
     }
 
     return () => {
-      track.stop();
+      try {
+        track.stop();
+      } catch (error) {
+        console.error('Error stopping the remote video track:', error);
+      }
     };
   }, [track]);
 

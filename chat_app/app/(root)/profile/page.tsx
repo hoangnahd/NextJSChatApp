@@ -10,7 +10,7 @@ export default function Profile() {
 
     const {data: session, status} = useSession();
     const { register, handleSubmit, watch, reset, formState: {errors}, setValue } = useForm();
-    const user = session?.user;
+    const user = session?.user as any;
     const [isFormChanged, setIsFormChanged] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -27,7 +27,7 @@ export default function Profile() {
         }
         setLoading(false);
     }, [user])
-    const HanldeSubmit = async (data) => {
+    const HanldeSubmit = async (data: any) => {
         try {
             const res = await fetch("/api/users/"+user?.id+"/update", {
                 method: "POST",
@@ -42,7 +42,7 @@ export default function Profile() {
         }
         
     }
-    const UploadPhoto = (photo) => {
+    const UploadPhoto = (photo : any) => {
         setValue("profileImage", photo?.info?.secure_url)
     }
     return loading ? (
@@ -89,7 +89,7 @@ export default function Profile() {
                 onChange={handleFormChange}
             />
             { errors.username &&<p className="text-sm text-red-500 w-[240px] flex items-start -mt-8 -mr-10">
-                {errors.username.message}
+                {errors as any || errors?.username.message}
             </p>}
             <button 
                 className={`btn border glass-effect hover:bg-gray-300 hover:bg-opacity-30 duration-200 ease-in-out px-16 text-white -ml-3 ${!isFormChanged ? 'opacity-50 cursor-not-allowed':`` } `}

@@ -1,16 +1,16 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChatList } from "@/components/ChatList";
 import { pusherClient } from "@/lib/pusher";
 import Image from "next/image";
 const Chats = () => {
     const { data: session, status } = useSession();
     const [loading, setLoading] = useState(true);
-    const user = session?.user;   
+    const user = session?.user as any;   
     const [chats, setChats] = useState([]); 
 
-    const getChats = async () => {
+    const getChats = useCallback( async () => {
         try {
             const response = await fetch(`/api/users/${user?._id}`, {
                 method: "GET",
@@ -27,20 +27,20 @@ const Chats = () => {
         catch (err) {
             
             console.log('Error fetching chat details:', err);
-        }
-    };
-    const updateUserActivity = async () => {
+        }  
+    }, [user]);
+    const updateUserActivity = useCallback(async () => {
         try {
             await fetch(`/api/users/${user?._id}/update`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json"
-                }}
-            )
+                }
+            })
         } catch (error) {
-          console.error("Error updating user activity:", error);
+            console.error("Error updating user activity:", error);
         }
-    };
+    }, [user]);
     useEffect(() => {
         if (user) {
           updateUserActivity();
@@ -64,12 +64,12 @@ const Chats = () => {
         if (user) {
             pusherClient.subscribe(user?._id);
     
-            const handleChatUpdate = (updatedChat) => {
+            const handleChatUpdate = (updatedChat:any) => {
                 setChats((prevChats) => {
-                    const chatIndex = prevChats.findIndex(chat => chat._id === updatedChat._id);
+                    const chatIndex = prevChats.findIndex((chat : any) => chat._id === updatedChat._id);
                     if (chatIndex !== -1) {
                         // Replace the existing chat
-                        const newChats = [...prevChats];
+                        const newChats = [...prevChats] as any;
                         newChats[chatIndex].messages.push(updatedChat.message);
                         newChats[chatIndex].lastMessageAt = updatedChat.message.createdAt;
                         if (

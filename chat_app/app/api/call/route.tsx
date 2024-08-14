@@ -6,7 +6,7 @@ import User from "@/model/User";
 import { connectToDb } from "@/mongodb";
 import { NextResponse } from 'next/server';
 
-export const POST = async (req) => {
+export const POST = async (req:any) => {
     try {
         await connectToDb();
 
@@ -30,29 +30,50 @@ export const POST = async (req) => {
                     model: AudioCall
                 }).exec();
         
-                console.log("Update message");
-        
                 if (message) {
-                    // Update the existing audioCall fields
-                    await AudioCall.findByIdAndUpdate(message.audioCall._id, {
-                        isCalling: isCalling === "true",
-                        response: response
-                    });
+                    // Calculate the time difference in milliseconds
+                    const timeDifference = Date.now() - message.createdAt.getTime();
+                    message.timeCount = timeDifference; // Ensure this is a number
+                    
+                    message.response = response;
+                    // Save the updated message
+                    await message.save();
         
-                    // Repopulate the updated audioCall fields
-                    message = await message.populate({
-                        path: "audioCall",
-                        model: AudioCall
-                    });
+                    // Optionally update audioCall with other fields if necessary
+                    if (message.audioCall) {
+                        await AudioCall.findByIdAndUpdate(message.audioCall._id, {
+                            isCalling: isCalling === "true",
+                            response: response
+                        });
+        
+                        // Repopulate the updated audioCall fields
+                        message = await message.populate(
+                            [
+                                {
+                                    path: "sender",
+                                    model: User
+                                },
+                                {
+                                    path: "seenBy",
+                                    model: User
+                                },
+                                {
+                                    path: "audioCall",
+                                    model: AudioCall
+                                }
+                            ]
+                        );
+                    }
         
                     // Trigger the Pusher event with the updated message
                     await pusherServer.trigger(chatId, "update-message-audio", message);
                 }
             } catch (error) {
                 console.error("Error updating message or audioCall:", error);
-                // You can handle the error appropriately, such as sending a response or logging it
+                // Handle the error appropriately, such as sending a response or logging it
             }
-        }     
+        }
+        
         else {
             const audioCall = new AudioCall({
                 isCalling: isCalling == "true" ? true : false,
@@ -83,7 +104,7 @@ export const POST = async (req) => {
     
             // Trigger Pusher events
             await pusherServer.trigger(chatId, "new-message", message);
-            updatedChat.members.forEach(async (member) => {
+            updatedChat.members.forEach(async (member:any) => {
                 await pusherServer.trigger(member._id.toString(), "update-chat", {
                     message: message,
                     _id: updatedChat._id,
@@ -93,7 +114,7 @@ export const POST = async (req) => {
         
 
         return new NextResponse("Sent message successfully", { status: 200 });
-    } catch (error) {
+    } catch (error:any) {
         console.error(error);
         return new NextResponse("Failed to send a message: " + error.message, {
             status: 500,

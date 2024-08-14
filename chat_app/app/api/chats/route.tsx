@@ -3,7 +3,7 @@ import User from "@/model/User";
 import { connectToDb } from "@/mongodb";
 
 
-export const POST = async (req) => {
+export const POST = async (req:any) => {
     try {
         await connectToDb();
 
@@ -22,7 +22,7 @@ export const POST = async (req) => {
             await newChat.save();
 
             // Update each member to include the new chat
-            await Promise.all(newChat.members.map(async (member) => {
+            await Promise.all(newChat.members.map(async (member:any) => {
                 // Ensure that member is an object with an id property
                 await User.findByIdAndUpdate(member, {
                     $addToSet: { chats: newChat }

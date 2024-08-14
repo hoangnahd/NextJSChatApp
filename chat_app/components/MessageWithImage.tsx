@@ -3,11 +3,11 @@ import Modal from "react-modal";
 import { useState, useEffect } from "react";
 import { FixedImage } from "./FIxedImage";
 
-export const MessageWithImage = ({currentUserId, Message}) => {
+export const MessageWithImage = ({currentUserId, Message}:{currentUserId:any, Message:any}) => {
     const [modalIsOpen, setModalIsOpen] = useState(false);
     const [modalImage, setModalImage] = useState("");
     
-    const openModal = (image) => {
+    const openModal = (image:any) => {
         setModalImage(image);
         setModalIsOpen(true);
     };

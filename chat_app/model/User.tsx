@@ -22,10 +22,6 @@ const UserSchema = new mongoose.Schema({
     type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Chat" }],
     default: [],
   },
-  isCameraOn: {
-    type: Boolean,
-    default: false
-  },
   lastActive: {
     type: Date,
     default: Date.now,

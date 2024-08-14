@@ -1,6 +1,6 @@
 "use client";
 import { ChatDetail } from "@/components/ChatDetail";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { ChatList } from "@/components/ChatList";
@@ -9,29 +9,28 @@ import { pusherClient } from "@/lib/pusher";
 const ChatPage = () => { 
     const { chatId } = useParams();
     const { data: session, status } = useSession();
-    const user = session?.user;
+    const user = session?.user as any;
     const [loading, setLoading] = useState(true);
     const [others, setOthers] = useState([]);  
     const [allMessages, setAllMessages] = useState({ messages: [] }); 
     const [chats, setChats] = useState([]);
-    console.log(process.env.PUBLIC_AGORA_APP_ID)
-    const getChats = async () => {
+    const getChats = useCallback(async () => {
         try {
             const response = await fetch(`/api/users/${user?._id}`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" }
             });
-
+    
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-
+    
             const result = await response.json();
-            const currentChat = result?.chats.find(chat => chat._id == chatId);
-
+            const currentChat = result?.chats.find((chat: any) => chat._id == chatId);
+    
             if (currentChat && currentChat.members && Array.isArray(currentChat.messages)) {
-                const otherMembers = currentChat.members.filter(member => member._id !== user?.id);
-                setOthers(otherMembers);   
+                const otherMembers = currentChat.members.filter((member: any) => member._id !== user?.id);
+                setOthers(otherMembers);
                 setAllMessages({ messages: currentChat.messages });
             } else {
                 console.log('Invalid response structure:', result);
@@ -41,11 +40,10 @@ const ChatPage = () => {
         catch (error) {
             console.log('Error fetching chats:', error);
         }
-    };
-
-    const SeenMessage = async () => {
+    }, [user, chatId]);
+    
+    const SeenMessage = useCallback(async () => {
         try {
-            // Perform the fetch request to update the seen status
             const response = await fetch(`/api/chats/${chatId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -58,77 +56,114 @@ const ChatPage = () => {
         } catch (error) {
             console.error('Error marking message as seen:', error);
         }
-    };
+    }, [chatId, user]);
     
-    useEffect(() => {
-        setLoading(true);
-        if (user) {
-           setLoading(false);
+    const updateUserActivity = useCallback(async () => {
+        try {
+            await fetch(`/api/users/${user?._id}/update`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
+        } catch (error) {
+            console.error("Error updating user activity:", error);
         }
     }, [user]);
-
+    
+    useEffect(() => {
+        if (user) {
+          
+          updateUserActivity();
+          const interval = setInterval(updateUserActivity, 60000); // Update every minute
+          return () => clearInterval(interval);
+        }
+    }, [user]);
+    useEffect(() => {
+        setLoading(true);
+        if(user)
+            setLoading(false);
+    }, [user])
     useEffect(() => {
         if (chatId && user) {
             getChats();
         }
     }, [chatId, user]);
     useEffect(() => {
-        if (allMessages) 
+        if (chatId && user) 
             SeenMessage();     
-    }, [allMessages]);
+    }, [chatId, user]);
 
     useEffect(() => {
-        if (user && chatId) {
-            const channel = pusherClient.subscribe(chatId.toString());
     
-            const handleMessage = (newMessage) => {
-    
-                // Update the chatDetail state with the new message
-                setAllMessages((prevChat) => ({
-                    ...prevChat,
-                    messages: [...prevChat.messages, newMessage],
-                }));
-    
-                // Update the chats state with the new message
-                setChats((prevChats) => {
-                    const chatIndex = prevChats.findIndex(chat => chat._id === chatId);
-                    if (chatIndex !== -1) {
-                        const updatedChat = { ...prevChats[chatIndex] };
-                        updatedChat.messages.push(newMessage);
-                        updatedChat.lastMessageAt = newMessage.createdAt;
-    
-                        // Ensure seenBy field in the updatedChat is unique
-                        updatedChat.messages = updatedChat.messages.map(message => {
-                            message.seenBy = [...new Set(message.seenBy)];
-                            return message;
-                        });
-                        
-                        const updatedChats = [...prevChats];
-                        updatedChats[chatIndex] = updatedChat;
+    const channel = pusherClient.subscribe(chatId.toString());
 
-                        if (
-                            updatedChats[chatIndex]?.messages?.length > 0 &&
-                            updatedChats[chatIndex]?.messages[updatedChats[chatIndex]?.messages?.length - 1]?.audioCall?.isCalling
-                        ) {
-                            const url = `/room/${chatId}`;
-                            const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes';
-                            window.open(url, 'newwindow', windowFeatures);
-                        }
-                        
-                        
-                        return updatedChats;
-                    }
-                    return prevChats;
-                });
-            };
-            channel.bind("new-message", handleMessage);
-    
-            return () => {
-                channel.unbind("new-message", handleMessage);
-                pusherClient.unsubscribe(chatId.toString());
-            };
+    const updateChatsWithMessage = (newMessage:any) => {
+        setChats((prevChats: any) => prevChats.map((chat:any) => {
+            if (chat._id === chatId) {
+                const updatedMessages = [...chat.messages, newMessage];
+                
+                return {
+                    ...chat,
+                    messages: updatedMessages,
+                    lastMessageAt: newMessage.createdAt,
+                };
+            }
+            return chat;
+        }));
+    };
+
+    const handleMessage = (newMessage:any) => {
+        setAllMessages((prevChat:any) => ({
+            ...prevChat,
+            messages: [...prevChat.messages, newMessage],
+        }));
+        if (
+            newMessage?.audioCall?.isCalling
+        ) {
+            const url = `/room/${chatId}`;
+            const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes';
+            window.open(url, 'newwindow', windowFeatures);
         }
+        updateChatsWithMessage(newMessage);
+    };
+
+    const handleUpdateMessage = (updatedMessage:any) => {
+        setChats((prevChats:any) => {
+            const chatIndex = prevChats.findIndex((chat:any) => chat._id === chatId);
+            if (chatIndex !== -1) {
+                const updatedChat = { ...prevChats[chatIndex] };
+
+                const messageIndex = updatedChat.messages.findIndex(
+                    (message:any) => message._id === updatedMessage._id
+                );
+
+                if (messageIndex !== -1) {
+                    updatedChat.messages[messageIndex] = updatedMessage;
+                }
+
+                return [
+                    ...prevChats.slice(0, chatIndex),
+                    updatedChat,
+                    ...prevChats.slice(chatIndex + 1)
+                ];
+            }
+
+            return prevChats;
+        });
+    };
+
+    channel.bind("new-message", handleMessage);
+    channel.bind("update-message-audio", handleUpdateMessage);
+
+    return () => {
+        channel.unbind("new-message", handleMessage);
+        channel.unbind("update-message-audio", handleUpdateMessage);
+        pusherClient.unsubscribe(chatId.toString());
+    };
     }, [user, chatId]);
+    
+    
 
     
     

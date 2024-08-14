@@ -1,26 +1,21 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useVoiceVisualizer, VoiceVisualizer } from 'react-voice-visualizer';
 
 
-const AudioRecorder = ({ onStop }) => {
-    const [error, setError] = useState(null);
-    
+const AudioRecorder = ({ onStop }:{onStop:any}) => {
+
     const recorderControls = useVoiceVisualizer();
 
     // Automatically handle recording completion
     useEffect(() => {
         if (recorderControls.recordedBlob) {
-
             handleStop(); // Automatically handle stop logic
         }
+        else
+            onStop(null);
     }, [recorderControls.recordedBlob]);
 
-    useEffect(() => {
-        if (recorderControls.error) {
-            setError(recorderControls.error);
-        }
-    }, [recorderControls.error]);
 
     const handleStop = async () => {
         if (recorderControls.recordedBlob) {
@@ -30,7 +25,7 @@ const AudioRecorder = ({ onStop }) => {
                     onStop(recorderControls.recordedBlob);
                 }
             } catch (err) {
-                setError(err.message);
+                console.log(err)
             }
         }
     };
@@ -38,7 +33,6 @@ const AudioRecorder = ({ onStop }) => {
     return (
         <div>
             <VoiceVisualizer controls={recorderControls} />
-            {error && <p>{error}</p>}
         </div>
     );
 };

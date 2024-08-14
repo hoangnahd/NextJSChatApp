@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { FixedImage } from "./FIxedImage"
 
-export const Contacts = ({value ,currentUserId}) => {
+export const Contacts = ({value ,currentUserId}:{value:any ,currentUserId:any}) => {
     const router = useRouter(); 
     const [contacts, setContacts] = useState([]);
 
@@ -14,7 +14,7 @@ export const Contacts = ({value ,currentUserId}) => {
                 throw new Error(`Error: ${res.status}`);
             }
             const data = await res.json();
-            let filteredContacts = [];
+            let filteredContacts = [] as any;
             for (let i = 0; i < data.length; i++) {
                 if (data[i]._id !== currentUserId) { // Exclude current user
                     filteredContacts.push(data[i]);
@@ -29,7 +29,7 @@ export const Contacts = ({value ,currentUserId}) => {
     useEffect(() => {
       getContacts();
     }, []);
-    const createChat = async (contactId) => {
+    const createChat = async (contactId:any) => {
         try {
             const res = await fetch("/api/chats", {
                 method: "POST",
@@ -64,7 +64,7 @@ export const Contacts = ({value ,currentUserId}) => {
             ) : (
                 <div className="flex flex-col gap-2 items-start">
                     <div className="flex flex-col gap-2 mt-1 w-full">
-                        {contacts.map((user) => (
+                        {contacts.map((user:any) => (
                             <button 
                                 key={user._id}
                                 onClick={() => {

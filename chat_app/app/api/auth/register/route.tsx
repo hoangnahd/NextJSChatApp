@@ -2,7 +2,7 @@ import User from "@/model/User";
 import { connectToDb } from "@/mongodb";
 import {hash} from "bcrypt";
 
-export const POST = async (req, res) => {
+export const POST = async (req:any, res:any) => {
     try {
         await connectToDb();
 

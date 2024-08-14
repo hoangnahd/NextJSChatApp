@@ -6,23 +6,25 @@ import { connectToDb } from "@/mongodb";
 import path from 'path';
 import fs from 'fs';
 import { NextResponse } from 'next/server';
+import { v4 as uuidv4 } from 'uuid'; // Import uuid for unique file names
 
-export const config = {
-    api: {
-        bodyParser: false, // Disallow body parsing, since we're handling formData directly
-    },
-};
 
-export const POST = async (req) => {
+export const POST = async (req:any) => {
     try {
         await connectToDb();
 
         const formData = await req.formData();
-        const text = formData.get("text");
+        const text = formData.get("text")?.trim();
         const currentUserId = formData.get("currentUserId");
         const chatId = formData.get("chatId");
         const audio = formData.get("audio");
-        const file = formData.get("file");
+        const file = formData.get("file")?.trim();
+
+        // Validate required fields
+        if (!currentUserId || !chatId || (!text && !audio && !file)) {
+            return new NextResponse("Invalid request parameters", { status: 400 });
+        }
+
         // Save the audio file if present
         let audioFilePath = null;
         if (audio) {
@@ -30,20 +32,17 @@ export const POST = async (req) => {
             if (!fs.existsSync(uploadPath)) {
                 fs.mkdirSync(uploadPath, { recursive: true });
             }
-            const audioFileName = audio.name;
-            const audioBuffer = Buffer.from(await audio.arrayBuffer());
-            const audioFileFullPath = path.join(uploadPath, audioFileName);
-            fs.writeFileSync(audioFileFullPath, audioBuffer);
-            audioFilePath = `/uploads/audio/${audioFileName}`;
-        }
 
-        if (audioFilePath == "/uploads/audio/" && !text && !file) {
-            return new NextResponse("Nothing to send", { status: 400 });
+            const uniqueFileName = `${uuidv4()}_${audio.name}`;
+            const audioFileFullPath = path.join(uploadPath, uniqueFileName);
+            const audioBuffer = Buffer.from(await audio.arrayBuffer());
+
+            fs.writeFileSync(audioFileFullPath, audioBuffer);
+            audioFilePath = `/uploads/audio/${uniqueFileName}`;
         }
 
         // Find the current user
         const currentUser = await User.findById(currentUserId);
-
         if (!currentUser) {
             return new NextResponse("User not found", { status: 404 });
         }
@@ -51,11 +50,12 @@ export const POST = async (req) => {
         // Create a new message
         const message = new Message({
             sender: currentUser,
-            text: text ? text.trim() : "",
-            seenBy: currentUser,
+            text: text || "",
+            seenBy: [currentUser],
             audio: audioFilePath || "",
-            file: file ? file.trim() : ""
+            file: file || ""
         });
+
         await message.save();
 
         // Update the chat with the new message
@@ -74,16 +74,17 @@ export const POST = async (req) => {
 
         // Trigger Pusher events
         await pusherServer.trigger(chatId, "new-message", message);
-        updatedChat.members.forEach(async (member) => {
+
+        for (const member of updatedChat.members) {
             await pusherServer.trigger(member._id.toString(), "update-chat", {
                 message: message,
                 _id: updatedChat._id,
             });
-        });
+        }
 
         return new NextResponse("Sent message successfully", { status: 200 });
-    } catch (error) {
-        console.error(error);
+    } catch (error:any) {
+        console.error("Failed to send a message:", error);
         return new NextResponse("Failed to send a message: " + error.message, {
             status: 500,
         });

@@ -5,7 +5,7 @@ import Message from "@/model/Message";
 import mongoose from "mongoose";
 import AudioCall from "@/model/AudioCall";
 
-export const GET = async (req, { params }) => {
+export const GET = async (req:any, { params }:{params:any}) => {
     try {
         await connectToDb();
         const { chatId } = params;
@@ -41,7 +41,7 @@ export const GET = async (req, { params }) => {
 
 
 
-export const POST = async (req, {params}) => {
+export const POST = async (req:any, {params}:{params:any}) => {
     try {
         await connectToDb();
         const body = await req.json();

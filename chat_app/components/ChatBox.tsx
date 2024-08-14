@@ -1,19 +1,18 @@
-"use client";
 import { useRef, useEffect } from "react";
 import { FixedImage } from "./FIxedImage";
 import Image from "next/image";
 import { MessageWithImage } from "./MessageWithImage";
 import moment from "moment";
 import { MessageWithFile } from "./MessageWithFile";
+import { Phone, PhoneMissed } from "@mui/icons-material";
 
-export const ChatBox = ({ chatDetail, others, currentUserId }) => {
-    const bottomRef = useRef(null);
-    const seenMessages = chatDetail?.messages.filter((message) => {
+export const ChatBox = ({ chatDetail, others, currentUserId }:{chatDetail:any, others:any, currentUserId:any}) => {
+    const bottomRef = useRef<HTMLDivElement | null>(null);
+    const seenMessages = chatDetail?.messages.filter((message:any) => {
         return message?.sender?._id == currentUserId && message?.seenBy?.length > 1;
     });
-
     const lastSeenMsg = seenMessages[seenMessages.length -1];
-    const formatDateTime = (createdAt) => {
+    const formatDateTime = (createdAt:any) => {
         const now = moment();
         const messageTime = moment(createdAt);
 
@@ -23,34 +22,57 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
             return messageTime.format('DD MMM YYYY'); // Different day, show date
         }
     }
-    const isImageURL = (url) => {
+    const isImageURL = (url:String) => {
         if (typeof url !== 'string') return false;
     
         // List of common image file extensions
         const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'tiff', 'svg'];
     
         // Extract the file extension from the URL
-        const extension = url.split('.').pop().toLowerCase();
+        const extension = url?.split('.')?.pop()?.toLowerCase();
     
         // Check if the extracted extension is in the list of image extensions
-        return imageExtensions.includes(extension);
+        return extension ? imageExtensions.includes(extension) : false;
     }
-    const isVideoURL = (url) => {
+    const isVideoURL = (url:any) => {
         if (typeof url !== 'string') return false;
     
         // List of common video file extensions
         const videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mov', 'mkv'];
     
         // Extract the file extension from the URL
-        const extension = url.split('.').pop().toLowerCase();
+        const extension = url?.split('.')?.pop()?.toLowerCase();
     
         // Check if the extracted extension is in the list of video extensions
-        return videoExtensions.includes(extension);
+        return extension && videoExtensions.includes(extension);
     };
-    const isActive = (lastActive) => {
+    const isActive = (lastActive:any) => {
         const oneMinuteAgo = new Date(Date.now() - 1000 * 60);
         return new Date(lastActive) > oneMinuteAgo;
     };
+    const formatDuration = (duration:any) => {
+        if (duration < 0) {
+            return "Invalid duration";
+        }
+    
+        const hours = Math.floor(duration / (1000 * 60 * 60));
+        const minutes = Math.floor((duration % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((duration % (1000 * 60)) / 1000);
+    
+        const formattedParts = [];
+        if (hours > 0) {
+            formattedParts.push(`${hours} hour${hours > 1 ? 's' : ''}`);
+        }
+        if (minutes > 0) {
+            formattedParts.push(`${minutes} minute${minutes > 1 ? 's' : ''}`);
+        }
+        if (seconds > 0 || formattedParts.length === 0) {
+            formattedParts.push(`${seconds} second${seconds > 1 ? 's' : ''}`);
+        }
+    
+        return formattedParts.join(', ');
+    };
+    
     useEffect(() => {
         // Smoothly scroll to the bottom of the chat when new messages are added
         bottomRef.current?.scrollIntoView({
@@ -60,7 +82,6 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
         });
     }, [chatDetail?.messages]);
     
-    console.log(chatDetail)
     return (
         <div className="flex flex-col flex-auto h-full p-2 relative">
             
@@ -80,7 +101,7 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
                                 <div className="text-2xl font-bold">{others[0]?.username}</div>
                             </div>
                             
-                            {chatDetail.messages.map((Message, index) => (
+                            {chatDetail.messages.map((Message:any, index:any) => (
                                 
                                 <div
                                     key={index}
@@ -113,11 +134,26 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
                                             {Message.audioCall && (
                                                 
                                                 <div
-                                                    className={`relative text-sm py-2 px-4 shadow rounded-xl ${Message.sender._id === currentUserId
-                                                        ? "mr-3 bg-sky-700"
-                                                        : "ml-3 bg-zinc-800"}`}
+                                                    className={`relative text-sm py-2 px-4 shadow rounded-xl ml-3 bg-zinc-800`}
                                                 >
-                                                    {Message.audioCall.response}
+                                                    {(Message.response == "cancel" || !Message.response) ? (
+                                                        <div className="flex flex-row gap-4 items-center px-3">
+                                                            <PhoneMissed sx={{color:"white"}} />
+                                                            <div className="flex flex-col">
+                                                                <div className="text-lg font-bold">Call</div>
+                                                                {formatDateTime(Message.createdAt)}
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex flex-row gap-4 items-center px-3">
+                                                            <Phone sx={{color:"white"}} />
+                                                            <div className="flex flex-col">
+                                                                <div className="text-lg font-bold flex flex-col gap-2">Call</div>
+                                                                {formatDuration(Message.timeCount)}
+                                                       
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )}
                                             {Message.text && (
@@ -131,7 +167,7 @@ export const ChatBox = ({ chatDetail, others, currentUserId }) => {
                                             )}
                                             {
                                                 Message.audio && (
-                                                    <audio controls>
+                                                    <audio controls className="px-3">
                                                         <source src={Message.audio} type="audio/wav" />
                                                         Your browser does not support the audio element.
                                                     </audio>

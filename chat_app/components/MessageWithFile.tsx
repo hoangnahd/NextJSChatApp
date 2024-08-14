@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 
-export const MessageWithFile = ({ url }) => {
+export const MessageWithFile = ({ url }:{url:any}) => {
     const [fileSize, setFileSize] = useState(null);
 
     useEffect(() => {
         const fetchFileSize = async () => {
             try {
                 const response = await fetch(url, { method: 'HEAD' });
-                const contentLength = response.headers.get('Content-Length');
+                const contentLength = response.headers.get('Content-Length') as any;
                 if (contentLength) {
-                    const sizeInMB = (contentLength / (1024 * 1024)).toFixed(2);
+                    const sizeInMB = (contentLength / (1024 * 1024)).toFixed(2) as any;
                     setFileSize(sizeInMB);
                 }
             } catch (error) {

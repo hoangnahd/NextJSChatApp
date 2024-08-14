@@ -1,7 +1,7 @@
 "use client"
 import { useParams, usePathname } from 'next/navigation';
 import Calls from "@/components/Calls";
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { pusherClient } from '@/lib/pusher';
 
@@ -9,12 +9,11 @@ export default function Page() {
     const {chatId} = useParams();
     const [chat, setChat] = useState(null)
     const [loading, setLoading] = useState(true);
-    const {data: session, status} = useSession();
+    const {data: session, status} = useSession() as {data: any, status: any};
     const user = session?.user;
     const appId = process.env.PUBLIC_AGORA_APP_ID
     
-    console.log(appId)
-    const getChats = async () => {
+    const getChats = useCallback(async () => {
         try {
             const response = await fetch(`/api/chats/${chatId}`, {
                 method: "GET",
@@ -32,7 +31,7 @@ export default function Page() {
             
             console.log('Error fetching chat details:', err);
         }
-    };
+    }, [user,chatId]);
     useEffect(() => {
         if(chatId && user) {
             getChats();
@@ -48,9 +47,8 @@ export default function Page() {
         if (user && chat) {
             const channel = pusherClient.subscribe(chatId.toString());
     
-            const handleMessage = (updatedMessage) => {
+            const handleMessage = (updatedMessage: any) => {
                 const status = updatedMessage.audioCall?.response;
-                console.log(updatedMessage)
     
                 // Check if the call has ended or was canceled
                 if (status === "end" || status === "cancel") {
@@ -58,7 +56,7 @@ export default function Page() {
                 }
     
                 // Update the specific message in the chat by searching for its id
-                setChat(prevChat => {
+                setChat((prevChat:any) => {
                     const updatedChat = { ...prevChat };
                     
                     updatedChat.messages.push(updatedMessage);
@@ -83,7 +81,7 @@ export default function Page() {
             <div className="loader"></div>
         </div>
     ) : (
-        <div className="flex w-full flex-col">
+        <div className="flex w-full h-full flex-col">
             <Calls appId={appId} chat={chat} currentUserId={user?._id}></Calls>
         </div>
     );

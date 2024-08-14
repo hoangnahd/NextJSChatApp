@@ -6,10 +6,10 @@ import { useForm } from "react-hook-form";
 import { signIn } from "next-auth/react";
 import toast from "react-hot-toast";
 
-const Form = ({type}) => {
+const Form = ({type}:{type:any}) => {
     const { register, handleSubmit, formState: { errors }, getValues } = useForm();
     const router = useRouter();
-    const HanldeSubmit = async (data) => {
+    const HanldeSubmit = async (data:any) => {
         if(type == "register") {
             const res = await fetch("/api/auth/register", {
                 method: "POST",
@@ -26,7 +26,7 @@ const Form = ({type}) => {
                 
         }
         if(type == "login") {
-            const res = await signIn('credentials', { redirect: false, ...data})
+            const res = await signIn('credentials', { redirect: false, ...data}) as any
 
             if(res.ok) 
                 router.push("/chats");
@@ -57,7 +57,7 @@ const Form = ({type}) => {
 
                         {errors.email && 
                             (<p className="error-msg mb-4 -mt-2">
-                                {errors.email.message}
+                                {errors as any || errors.email.message}
                             </p>)
                         }       
                         <div className="flex items-center w-full relative">
@@ -76,7 +76,7 @@ const Form = ({type}) => {
                         <div className="flex flex-row w-full mb-3 -mt-1">
                             {errors.password && (
                                 <p className="error-msg w-full">
-                                    {errors.password.message}
+                                    {errors as any || errors.password.message}
                                 </p>
                             )}
                             <div className="flex items-end justify-end w-full font-bold cursor-pointer">Forgot Password</div>
@@ -101,7 +101,7 @@ const Form = ({type}) => {
                     
                     {errors.email && 
                         (<p className="error-msg -mt-2">
-                            {errors.email.message}
+                            {errors as any || errors.email.message}
                         </p>)
                     }
                     <div className="relative flex items-center">
@@ -116,9 +116,9 @@ const Form = ({type}) => {
                         <Person sx={{ color: "white" }} className="absolute right-4 -mt-2" />
                     </div>
                     
-                    {errors.email && 
+                    {errors.username && 
                         (<p className="error-msg -mt-2">
-                            {errors.username.message}
+                            {errors as any || errors.username.message}
                         </p>)
                     }
                     <div className="relative flex items-center">
@@ -143,7 +143,7 @@ const Form = ({type}) => {
                     
                     {errors.password && (
                         <p className="error-msg -mt-2">
-                            {errors.password.message}
+                            {errors as any || errors.password.message}
                         </p>
                     )}
                     <div className="relative flex items-center">
@@ -163,7 +163,7 @@ const Form = ({type}) => {
                     
                     {errors.confirmPassword && (
                         <p className="error-msg -mt-2">
-                            {errors.confirmPassword.message}
+                            {errors as any || errors.confirmPassword.message}
                         </p>
                     )}
                     <button className="btn text-black bg-white w-full mt-2">Create Account</button>

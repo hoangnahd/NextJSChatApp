@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { Logout } from "@mui/icons-material";
 import { signOut, useSession } from "next-auth/react";
-import { useRef, useState, useEffect } from "react";
 import { FixedImage } from "./FIxedImage";
 
 const TopBar = () => {
-    const {data: session, status} = useSession();
+    const {data: session, status} = useSession() as {data:any, status:any};
 
     return (
         <div className="top-bar flex flex-row justify-between items-center px-8 bg-black w-full h-20 min-w-[700px] text-white border-b">

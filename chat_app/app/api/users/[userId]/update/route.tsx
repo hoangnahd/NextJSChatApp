@@ -1,7 +1,7 @@
 import User from "@/model/User";
 import { connectToDb } from "@/mongodb";
 
-export const POST = async (req, {params}) => {
+export const POST = async (req:any, {params}:{params:any}) => {
     try {
         await connectToDb();
         const {userId} = params;
@@ -19,7 +19,7 @@ export const POST = async (req, {params}) => {
         return new Response("Failed to update user", { status: 500 })
     }
 }
-export const GET = async (req, { params }) => {
+export const GET = async (req:any, { params }:{params:any}) => {
     try {
         await connectToDb();
         const {userId} = params;

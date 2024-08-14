@@ -20,9 +20,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-black`}>
       <Provider>
-          <ToasterContext />
-          {children}
-        </Provider>
+        <ToasterContext />
+        {children}
+      </Provider>
       </body>
     </html>
   );
